@@ -202,6 +202,8 @@ namespace WindowThumbViewer
 		{
 			Handle = new WindowInteropHelper( this ).Handle;
 			var preset = CreatePreset(SelectedHandles.Count);
+			var scale = GetSystemScale();
+			var scaled = preset.Select( ( x ) => x.Scale( scale ) ).ToList();
 			canvas.Children.Clear();
 
 			foreach( var win in SelectedHandles )
@@ -223,6 +225,7 @@ namespace WindowThumbViewer
 				canvas.Children.Add( lab );
 				Canvas.SetTop( lab, preset[win.Id].Top );
 				Canvas.SetLeft( lab, preset[win.Id].Left );
+
 
 				if( win.ThumbnailHandle != IntPtr.Zero )
 					Win32Funcs.DwmUnregisterThumbnail( win.ThumbnailHandle );
@@ -251,12 +254,22 @@ namespace WindowThumbViewer
 					props.fSourceClientAreaOnly = false;
 					props.fVisible = true;
 					props.opacity = 255;
-					props.rcDestination = preset[win.Id];
+					props.rcDestination = scaled[win.Id];
 
 					Win32Funcs.DwmUpdateThumbnailProperties( win.ThumbnailHandle, ref props );
 				}
 
 			}
+		}
+
+		public double GetSystemScale()
+		{
+			var dpi = 1.0;
+			using( System.Drawing.Graphics graphics = System.Drawing.Graphics.FromHwnd( IntPtr.Zero ) )
+			{
+				dpi = graphics.DpiX / 96.0;
+			}
+			return dpi;
 		}
 
 		private void Window_MouseMove( object sender, MouseEventArgs e )

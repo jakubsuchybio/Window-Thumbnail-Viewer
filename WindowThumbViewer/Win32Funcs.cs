@@ -90,6 +90,13 @@ namespace WindowThumbViewer
 		public int Bottom;
 
 		public List<Rect> AsList() => new List<Rect> { this };
+
+		public Rect Scale( double percentage ) =>
+			new Rect(
+				 (int)( Left * percentage ),
+				 (int)( Top * percentage ),
+				 (int)( Right * percentage ),
+				 (int)( Bottom * percentage ) );
 	}
 
 	public static class RectUtils

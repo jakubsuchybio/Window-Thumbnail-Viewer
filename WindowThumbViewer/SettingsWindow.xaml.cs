@@ -70,6 +70,9 @@ namespace WindowThumbViewer
 			while( num < MainWindow.SelectedHandles.Count )
 			{
 				var last = MainWindow.SelectedHandles.Count-1;
+				var tempHandle = MainWindow.SelectedHandles?[last].ThumbnailHandle ?? IntPtr.Zero;
+				if( MainWindow.SelectedHandles?[last].ThumbnailHandle != IntPtr.Zero )
+					Win32Funcs.DwmUnregisterThumbnail( tempHandle );
 				MainWindow.SelectedHandles.RemoveAt( last );
 			}
 		}
