@@ -28,15 +28,34 @@ namespace WindowThumbViewer
 		{
 			InitializeComponent();
 			Handle = new WindowInteropHelper( this ).Handle;
-			Settings = new SettingsWindow();
 			LoadWindows();
+			SearchForTwitch();
+			Settings = new SettingsWindow();
+		}
+
+		private void SearchForTwitch()
+		{
+			var twitches =
+				AllHandles
+					.Where(x=>x.Value.Contains("Twitch"))
+					.OrderBy(x=>x.Value, new AlphanumComparatorFast())
+					.ToList();
+
+			foreach( var item in twitches )
+			{
+				if( SelectedHandles == null )
+					SelectedHandles = new ObservableCollection<ListItemTemplate>();
+				var last = MainWindow.SelectedHandles.Count;
+				MainWindow.SelectedHandles.Add( new ListItemTemplate( last, item.Key, item.Value ) );
+
+			}
 		}
 
 		private List<Rect> CreatePreset( int i )
 		{
-			var left = 0;
-			var top = 0;
-			var right = (int)this.ActualWidth-15;
+			var left = 1;
+			var top = 1;
+			var right = (int)this.ActualWidth-14;
 			var bottom = (int)this.ActualHeight-38;
 
 			var ret = new List<Rect>();
@@ -160,8 +179,23 @@ namespace WindowThumbViewer
 			switch( e.Key )
 			{
 				case Key.F1: HandleSettings(); break;
-				case Key.F5: HandleRefreshAll(); break;
+				case Key.F5: HandleRefreshAllWindows(); break;
 			}
+		}
+
+		private void HandleRefreshAllWindows()
+		{
+			foreach( var item in SelectedHandles )
+			{
+				if( item.Handle != IntPtr.Zero && item.WindowName.Contains( "Twitch" ) )
+				{
+					Win32Funcs.SetForegroundWindow( item.Handle );
+					System.Threading.Thread.Sleep( 150 );
+					System.Windows.Forms.SendKeys.SendWait( "{F5}" );
+					System.Threading.Thread.Sleep( 150 );
+				}
+			}
+			Win32Funcs.SetForegroundWindow( Handle );
 		}
 
 		public static void LoadWindows()
@@ -173,9 +207,6 @@ namespace WindowThumbViewer
 
 		private static bool Callback( IntPtr hwnd, int lParam )
 		{
-			if( Handle == hwnd || Settings.Handle == hwnd )
-				return true;
-
 			if( ( Win32Funcs.GetWindowLongA( hwnd, Win32Funcs.GWL_STYLE ) & Win32Funcs.TARGETWINDOW ) == Win32Funcs.TARGETWINDOW )
 			{
 				StringBuilder sb = new StringBuilder(100);
@@ -195,7 +226,9 @@ namespace WindowThumbViewer
 			var top = maximized ? 0 : this.Top;
 			Settings.Left = left + ( this.ActualWidth - Settings.Width ) / 2;
 			Settings.Top = top + ( this.ActualHeight - Settings.Height ) / 2;
-			Settings.Show();
+			Settings.ShowDialog();
+
+			HandleRefreshAll();
 		}
 
 		private void HandleRefreshAll()
@@ -203,7 +236,7 @@ namespace WindowThumbViewer
 			Handle = new WindowInteropHelper( this ).Handle;
 			var preset = CreatePreset(SelectedHandles.Count);
 			var scale = GetSystemScale();
-			var scaled = preset.Select( ( x ) => x.Scale( scale ) ).ToList();
+			var scaled = preset.Select( ( x ) => x.Scale( scale ).MakeSmaller(3) ).ToList();
 			canvas.Children.Clear();
 
 			foreach( var win in SelectedHandles )
@@ -213,7 +246,11 @@ namespace WindowThumbViewer
 				rect.Height = preset[win.Id].Bottom - preset[win.Id].Top;
 
 				rect.Stroke = Brushes.Black;
-				rect.StrokeThickness = 3;
+				rect.StrokeThickness = 1;
+				rect.Tag = win.Id;
+				rect.IsHitTestVisible = true;
+				rect.Fill = Brushes.DarkGray;
+				rect.MouseDown += FocusWindow;
 
 				canvas.Children.Add( rect );
 				Canvas.SetTop( rect, preset[win.Id].Top );
@@ -240,8 +277,20 @@ namespace WindowThumbViewer
 					PSIZE size;
 					Win32Funcs.DwmQueryThumbnailSourceSize( win.ThumbnailHandle, out size );
 
-					//this.Title = $"Actual:{Width}/{Height} Preset:{preset[win.Id].Left}/{preset[win.Id].Top},{preset[win.Id].Right}/{preset[win.Id].Bottom} Size:{size.x}/{size.y}";
+					var dest = scaled[win.Id];
+					var destWidth = (dest.Right - dest.Left);
+					var destHeight = (dest.Bottom - dest.Top);
+					var sourceDiff = (double)size.x / size.y;
+					var destDiff = (double)destWidth / destHeight;
 
+					var sizeXScaled = size.x * (destHeight /  (double)size.y);
+					var sizeYScaled = size.y * (destWidth /  (double)size.x );
+					//center by width
+					if( sourceDiff < destDiff )
+						dest.Left += (int)( ( destWidth - sizeXScaled ) / 2 );
+					//center by height
+					else
+						dest.Top += (int)( ( destHeight - sizeYScaled ) / 2 );
 
 					DWM_THUMBNAIL_PROPERTIES props = new DWM_THUMBNAIL_PROPERTIES();
 
@@ -254,12 +303,22 @@ namespace WindowThumbViewer
 					props.fSourceClientAreaOnly = false;
 					props.fVisible = true;
 					props.opacity = 255;
-					props.rcDestination = scaled[win.Id];
+					props.rcDestination = dest;
+
+
 
 					Win32Funcs.DwmUpdateThumbnailProperties( win.ThumbnailHandle, ref props );
 				}
 
 			}
+		}
+
+		private void FocusWindow( object sender, MouseButtonEventArgs e )
+		{
+			var rect = sender as Rectangle;
+			var id = int.Parse(rect.Tag.ToString());
+			if( SelectedHandles[id].Handle != IntPtr.Zero )
+				Win32Funcs.SetForegroundWindow( SelectedHandles[id].Handle );
 		}
 
 		public double GetSystemScale()
@@ -272,9 +331,9 @@ namespace WindowThumbViewer
 			return dpi;
 		}
 
-		private void Window_MouseMove( object sender, MouseEventArgs e )
+		private void Window_SizeChanged( object sender, SizeChangedEventArgs e )
 		{
-			//this.Title = e.GetPosition( this ).ToString();
+			HandleRefreshAll();
 		}
 	}
 }

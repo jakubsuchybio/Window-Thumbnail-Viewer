@@ -9,39 +9,23 @@ namespace WindowThumbViewer
 {
 	public static class Win32Funcs
 	{
-		#region Constants
-
 		public static readonly int GWL_STYLE = -16;
 
-		public static readonly int DWM_TNP_RECTDESTINATION = 0x00000001;
-		public static readonly int DWM_TNP_RECTSOURCE = 0x00000002;
-		public static readonly int DWM_TNP_OPACITY = 0x00000004;
-		public static readonly int DWM_TNP_VISIBLE = 0x00000008;
-		public static readonly int DWM_TNP_SOURCECLIENTAREAONLY = 0x00000010;
+		public const int DWM_TNP_RECTDESTINATION = 0x00000001;
+		public const int DWM_TNP_RECTSOURCE = 0x00000002;
+		public const int DWM_TNP_OPACITY = 0x00000004;
+		public const int DWM_TNP_VISIBLE = 0x00000008;
+		public const int DWM_TNP_SOURCECLIENTAREAONLY = 0x00000010;
 
-		public static readonly ulong WS_VISIBLE = 0x10000000L;
-		public static readonly ulong WS_BORDER = 0x00800000L;
-		public static readonly ulong TARGETWINDOW = WS_BORDER | WS_VISIBLE;
+		public const ulong WS_VISIBLE = 0x10000000L;
+		public const ulong WS_BORDER = 0x00800000L;
+		public const ulong TARGETWINDOW = WS_BORDER | WS_VISIBLE;
 
-		#endregion
+		public const uint WM_KEYDOWN = 0x0100;
+		public const int VK_F5 = 0x74;
 
-		#region DWM functions
-
-		[DllImport( "dwmapi.dll" )]
-		public static extern int DwmRegisterThumbnail( IntPtr dest, IntPtr src, out IntPtr thumb );
-
-		[DllImport( "dwmapi.dll" )]
-		public static extern int DwmUnregisterThumbnail( IntPtr thumb );
-
-		[DllImport( "dwmapi.dll" )]
-		public static extern int DwmQueryThumbnailSourceSize( IntPtr thumb, out PSIZE size );
-
-		[DllImport( "dwmapi.dll" )]
-		public static extern int DwmUpdateThumbnailProperties( IntPtr hThumb, ref DWM_THUMBNAIL_PROPERTIES props );
-
-		#endregion
-
-		#region Win32 helper functions
+		[DllImport( "user32.dll" )]
+		public static extern bool PostMessage( IntPtr hWnd, UInt32 Msg, int wParam, int lParam );
 
 		[DllImport( "user32.dll" )]
 		public static extern ulong GetWindowLongA( IntPtr hWnd, int nIndex );
@@ -56,7 +40,20 @@ namespace WindowThumbViewer
 		[DllImport( "user32.dll", CharSet = CharSet.Auto, SetLastError = true )]
 		public static extern bool SetForegroundWindow( IntPtr hWnd );
 
-		#endregion
+
+		[DllImport( "dwmapi.dll" )]
+		public static extern int DwmRegisterThumbnail( IntPtr dest, IntPtr src, out IntPtr thumb );
+
+		[DllImport( "dwmapi.dll" )]
+		public static extern int DwmUnregisterThumbnail( IntPtr thumb );
+
+		[DllImport( "dwmapi.dll" )]
+		public static extern int DwmQueryThumbnailSourceSize( IntPtr thumb, out PSIZE size );
+
+		[DllImport( "dwmapi.dll" )]
+		public static extern int DwmUpdateThumbnailProperties( IntPtr hThumb, ref DWM_THUMBNAIL_PROPERTIES props );
+
+
 
 	}
 
@@ -97,6 +94,13 @@ namespace WindowThumbViewer
 				 (int)( Top * percentage ),
 				 (int)( Right * percentage ),
 				 (int)( Bottom * percentage ) );
+
+		public Rect MakeSmaller( int size ) =>
+			new Rect(
+				 Left + size,
+				 Top + size,
+				 Right - size,
+				 Bottom - size );
 	}
 
 	public static class RectUtils
