@@ -179,6 +179,7 @@ namespace WindowThumbViewer
 			switch( e.Key )
 			{
 				case Key.F1: HandleSettings(); break;
+				case Key.F2: HandleRefreshAll(); break;
 				case Key.F5: HandleRefreshAllWindows(); break;
 			}
 		}
