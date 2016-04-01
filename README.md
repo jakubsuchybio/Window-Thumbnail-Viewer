@@ -2,23 +2,15 @@
 This utilizes DWM library to create 1 to 16 thumbnails of other windows by their handles.
 
 Can create 1 to 16 regions for Thumbnails.
-For demontration here is 8: 
-![alt tag](Content/preview8.png)
+For demontration here is 8:
+![alt tag](Content/preview6.png)
 
 Utilizes few helper methods for splitting rectangles and with LINQ generation of all 1-16 is relatively easy.
 
-In settings (via F1) you can set the number of regions and Refresh Handles
-See here: 
+In settings (via F1) you can set the number of regions and Refresh Handles:
 ![alt tag](Content/previewSettings.png)
 
 Selection of handles looks like this:
 ![alt tag](Content/previewHandles.png)
 
-And lastly generation of DWM Thumbnails (via F5):
-![alt tag](Content/previewThumbnails.png)
-
-As you can see, rendering of DWM Thumbnails isn't working properly.
-
-TODO:
-- Automatic refresh (as with F5) when resizing
-- Fix DWM Thumbnails positioning and sizes ( http://answers.microsoft.com/en-us/windows/forum/apps_windows_10-winapps/dwm-thumbnail-size-in-wpf-x-winforms-on-windows-10/6b7137c7-1b17-4975-982f-8146a355b098 -> got redirected to MSDN Forums here: https://social.msdn.microsoft.com/Forums/en-US/b9392cf9-7082-4072-bea0-4f89182e5d39/dwm-thumbnail-size-in-wpf-vs-winforms-on-windows-10-is-broken?forum=windowsgeneraldevelopmentissues )
+You can also auto-refresh all selected Twitch handles with F5
