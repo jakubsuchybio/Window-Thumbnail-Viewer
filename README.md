@@ -2,10 +2,10 @@
 
 This utilizes DWM library to create 1 to 16 thumbnails of other windows by their handles.
 
-##Requirements:
+## Requirements:
 - Windows Vista or later
 
-##Features:
+## Features:
 
 - Can create 1 to 16 regions for Thumbnails.<br>
 For demontration here is 8:
